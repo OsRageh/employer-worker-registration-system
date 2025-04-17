@@ -1,25 +1,24 @@
 package com.cbozan.view.display;
 
+import com.cbozan.dao.WorkerDAO;
+import com.cbozan.entity.Worker;
+import com.cbozan.exception.EntityException;
+import com.cbozan.view.component.RecordTextField;
+import com.cbozan.view.component.TextArea;
+import com.cbozan.view.helper.ComponentHelper;
+import com.cbozan.view.helper.Observer;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.text.JTextComponent;
-
-import com.cbozan.dao.WorkerDAO;
-import com.cbozan.entity.Worker;
-import com.cbozan.exception.EntityException;
-import com.cbozan.view.component.RecordTextField;
-import com.cbozan.view.component.TextArea;
-import com.cbozan.view.helper.Observer;
 
 public class WorkerCard extends JPanel implements ActionListener{
 	
@@ -281,18 +280,8 @@ public class WorkerCard extends JPanel implements ActionListener{
 			
 		}
 		
-		for(int i = 2; i < this.getComponentCount(); i += 3) {
-			if(getComponent(i - 1) instanceof RecordTextField)
-				((RecordTextField)this.getComponent(i - 1)).setEditable(false);
-			else if(getComponent(i - 1) instanceof TextArea)
-				((TextArea)getComponent(i - 1)).setEditable(false);
-			
-			((JButton)this.getComponent(i)).setIcon(new ImageIcon("src\\icon\\text_edit.png"));
-		}
-		
-		
+		ComponentHelper.resetEditButtons(this);
 	}
-
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
