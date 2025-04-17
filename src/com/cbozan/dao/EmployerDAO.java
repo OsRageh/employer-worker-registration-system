@@ -1,6 +1,9 @@
 package com.cbozan.dao;
 
 
+import com.cbozan.entity.Employer;
+import com.cbozan.entity.Employer.EmployerBuilder;
+import com.cbozan.exception.EntityException;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,15 +13,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map.Entry;
-
-import javax.swing.JOptionPane;
-
 import java.util.List;
-
-import com.cbozan.entity.Employer;
-import com.cbozan.entity.Employer.EmployerBuilder;
-import com.cbozan.exception.EntityException;
+import java.util.Map.Entry;
+import javax.swing.JOptionPane;
 
 public class EmployerDAO {
 	
@@ -37,6 +34,39 @@ public class EmployerDAO {
 		return null;
 	}
 	
+	/**
+	 * Builds an Employer object from ResultSet and adds it to the provided list and cache
+	 * @param rs ResultSet containing employer data
+	 * @param list List to add the employer to (can be null if not needed)
+	 * @return The built Employer object or null if there was an exception
+	 * @throws SQLException if database error occurs
+	 */
+	private Employer processEmployerFromResultSet(ResultSet rs, List<Employer> list) throws SQLException {
+		EmployerBuilder builder = new EmployerBuilder();
+		builder.setId(rs.getInt("id"));
+		builder.setFname(rs.getString("fname"));
+		builder.setLname(rs.getString("lname"));
+		
+		if(rs.getArray("tel") == null)
+			builder.setTel(null);
+		else
+			builder.setTel(Arrays.asList((String [])rs.getArray("tel").getArray()));
+		
+		builder.setDescription(rs.getString("description"));
+		builder.setDate(rs.getTimestamp("date"));
+		
+		try {
+			Employer employer = builder.build();
+			if(list != null) {
+				list.add(employer);
+			}
+			cache.put(employer.getId(), employer);
+			return employer;
+		} catch (EntityException e) {
+			showEntityException(e, rs.getString("fname") + " " + rs.getString("lname"));
+			return null;
+		}
+	}
 	
 	public List<Employer> list(){
 		
@@ -62,36 +92,9 @@ public class EmployerDAO {
 			st = conn.createStatement();
 			rs = st.executeQuery(query);
 			
-			EmployerBuilder builder;
-			Employer employer;
-			
 			while(rs.next()) {
-				
-				builder = new EmployerBuilder();
-				builder.setId(rs.getInt("id"));
-				builder.setFname(rs.getString("fname"));
-				builder.setLname(rs.getString("lname"));
-				
-				if(rs.getArray("tel") == null)
-					builder.setTel(null);
-				else
-					builder.setTel(Arrays.asList((String [])rs.getArray("tel").getArray()));
-				
-				builder.setDescription(rs.getString("description"));
-				builder.setDate(rs.getTimestamp("date"));
-				
-				try {
-					
-					employer = builder.build();
-					list.add(employer);
-					cache.put(employer.getId(), employer);
-					
-				} catch (EntityException e) {
-					showEntityException(e, rs.getString("fname") + " " + rs.getString("lname"));
-				}
-				
+				processEmployerFromResultSet(rs, list);
 			}
-			
 			
 		} catch (SQLException e) {
 			showSQLException(e);
@@ -133,29 +136,7 @@ public class EmployerDAO {
 				
 				ResultSet rs = conn.createStatement().executeQuery(query2);
 				while(rs.next()) {
-					
-					EmployerBuilder builder = new EmployerBuilder();
-					builder.setId(rs.getInt("id"));
-					builder.setFname(rs.getString("fname"));
-					builder.setLname(rs.getString("lname"));
-					
-					if(rs.getArray("tel") == null)
-						builder.setTel(null);
-					else
-						builder.setTel(Arrays.asList((String [])rs.getArray("tel").getArray()));
-					
-					builder.setDescription(rs.getString("description"));
-					builder.setDate(rs.getTimestamp("date"));
-					
-					try {
-						
-						Employer emp = builder.build();
-						cache.put(emp.getId(), emp);
-						
-					} catch (EntityException e) {
-						showEntityException(e, rs.getString("fname") + " " + rs.getString("lname"));
-					}
-					
+					processEmployerFromResultSet(rs, null);
 				}
 				
 			}
